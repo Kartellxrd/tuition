@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.models.announcement import Announcement
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.user import User
+from app.models.module import Module
 router=APIRouter()
 class AnnouncementCreate(BaseModel):
     title:str=Field(min_length=2,max_length=180); message:str=Field(min_length=2,max_length=5000); important:bool=False
@@ -20,6 +21,7 @@ def list_announcements(module_id:UUID,user:User=Depends(get_current_user),db:Ses
     return list(db.scalars(select(Announcement).where(Announcement.module_id==module_id).order_by(Announcement.important.desc(),Announcement.created_at.desc())))
 @router.post("/{module_id}")
 def create_announcement(module_id:UUID,payload:AnnouncementCreate,tutor:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    if not db.get(Module,module_id): raise HTTPException(404,"Module not found.")
     item=Announcement(module_id=module_id,title=payload.title.strip(),message=payload.message.strip(),important=payload.important,created_by=tutor.id);db.add(item);db.commit();db.refresh(item);return item
 
 class AnnouncementUpdate(BaseModel):
