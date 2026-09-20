@@ -18,7 +18,6 @@ class EnrollmentResponse(BaseModel):
     status: EnrollmentStatus
     expected_price: Decimal
     payment_reference: str | None
-    proof_of_payment_storage_path: str | None
     rejection_reason: str | None
     reviewed_at: datetime | None
     reviewed_by: UUID | None
