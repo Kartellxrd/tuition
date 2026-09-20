@@ -62,3 +62,17 @@ def reject(enrollment_id: UUID, payload: RejectEnrollmentRequest, tutor: User = 
     if e.status != EnrollmentStatus.PENDING: raise HTTPException(status_code=409, detail="Only pending enrollments can be rejected.")
     e.status = EnrollmentStatus.REJECTED; e.rejection_reason = payload.reason.strip(); e.reviewed_by = tutor.id; e.reviewed_at = datetime.now(timezone.utc)
     db.commit(); db.refresh(e); return serialize(e)
+
+@router.get("/admin/all", response_model=list[EnrollmentResponse])
+def all_enrollments(status_filter:EnrollmentStatus|None=None,module_id:UUID|None=None,_:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    q=select(Enrollment)
+    if status_filter is not None: q=q.where(Enrollment.status==status_filter)
+    if module_id is not None: q=q.where(Enrollment.module_id==module_id)
+    return [serialize(e) for e in db.scalars(q.order_by(Enrollment.created_at.desc()))]
+
+@router.get("/admin/students")
+def enrolled_students(module_id:UUID|None=None,_:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    q=select(User.id,User.name,User.email,Enrollment.id.label("enrollment_id"),Enrollment.module_id,Enrollment.tier,Enrollment.status,Enrollment.created_at).join(Enrollment,Enrollment.student_id==User.id)
+    if module_id is not None: q=q.where(Enrollment.module_id==module_id)
+    rows=db.execute(q.order_by(User.name,Enrollment.created_at.desc())).all()
+    return [{"id":x.id,"name":x.name,"email":x.email,"enrollment_id":x.enrollment_id,"module_id":x.module_id,"tier":x.tier,"status":x.status,"enrolled_at":x.created_at} for x in rows]
