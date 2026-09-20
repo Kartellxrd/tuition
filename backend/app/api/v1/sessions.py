@@ -34,3 +34,32 @@ def upcoming(user:User=Depends(get_current_user),db:DBSession=Depends(get_db)):
     if private_ids: conditions.append((Session.tier==EnrollmentTier.ONE_ON_ONE)&Session.enrollment_id.in_(private_ids))
     if not conditions:return []
     return list(db.scalars(select(Session).where(or_(*conditions),Session.status==SessionStatus.SCHEDULED,Session.start_at>=datetime.now(timezone.utc)).order_by(Session.start_at)))
+
+class SessionUpdate(BaseModel):
+    title:str|None=Field(None,min_length=2,max_length=180); notes:str|None=None; start_at:datetime|None=None; end_at:datetime|None=None; mode:SessionMode|None=None; location:str|None=None; meeting_link:str|None=None; status:SessionStatus|None=None
+
+@router.get("/admin")
+def admin_sessions(_:User=Depends(require_tutor),db:DBSession=Depends(get_db)):
+    return list(db.scalars(select(Session).order_by(Session.start_at.desc())))
+
+@router.patch("/admin/{session_id}")
+def update_session(session_id:UUID,payload:SessionUpdate,_:User=Depends(require_tutor),db:DBSession=Depends(get_db)):
+    item=db.get(Session,session_id)
+    if not item: raise HTTPException(404,"Session not found.")
+    data=payload.model_dump(exclude_unset=True)
+    start=data.get("start_at",item.start_at); end=data.get("end_at",item.end_at)
+    if end<=start: raise HTTPException(400,"end_at must be after start_at.")
+    for key,value in data.items(): setattr(item,key,value)
+    db.commit();db.refresh(item);return item
+
+@router.post("/admin/{session_id}/cancel")
+def cancel_session(session_id:UUID,_:User=Depends(require_tutor),db:DBSession=Depends(get_db)):
+    item=db.get(Session,session_id)
+    if not item: raise HTTPException(404,"Session not found.")
+    item.status=SessionStatus.CANCELLED;db.commit();db.refresh(item);return item
+
+@router.post("/admin/{session_id}/complete")
+def complete_session(session_id:UUID,_:User=Depends(require_tutor),db:DBSession=Depends(get_db)):
+    item=db.get(Session,session_id)
+    if not item: raise HTTPException(404,"Session not found.")
+    item.status=SessionStatus.COMPLETED;db.commit();db.refresh(item);return item
