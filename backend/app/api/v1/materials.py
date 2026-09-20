@@ -8,7 +8,7 @@ from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.material import Material, MaterialCategory
 from app.models.module import Module
 from app.models.user import User
-from app.services.storage import signed_course_material_url, upload_course_material
+from app.services.storage import delete_course_material, signed_course_material_url, upload_course_material
 
 router = APIRouter()
 
@@ -39,3 +39,24 @@ def download_material(material_id: UUID, user: User = Depends(get_current_user),
     if user.role.value != "TUTOR" and not active_access(db, user, item.module_id):
         raise HTTPException(403, "Active enrollment required.")
     return {"url": signed_course_material_url(item.storage_path), "expires_in": 300, "filename": item.original_filename}
+
+from pydantic import BaseModel, Field
+class MaterialUpdate(BaseModel):
+    title: str | None = Field(None, min_length=2, max_length=180)
+    description: str | None = None
+    category: MaterialCategory | None = None
+
+@router.patch("/{material_id}")
+def update_material(material_id: UUID, payload: MaterialUpdate, _: User = Depends(require_tutor), db: Session = Depends(get_db)):
+    item=db.get(Material,material_id)
+    if not item: raise HTTPException(404,"Material not found.")
+    for key,value in payload.model_dump(exclude_unset=True).items():
+        setattr(item,key,value.strip() if isinstance(value,str) else value)
+    db.commit();db.refresh(item);return item
+
+@router.delete("/{material_id}",status_code=204)
+def delete_material(material_id: UUID, _: User = Depends(require_tutor), db: Session = Depends(get_db)):
+    item=db.get(Material,material_id)
+    if not item: raise HTTPException(404,"Material not found.")
+    delete_course_material(item.storage_path)
+    db.delete(item);db.commit()
