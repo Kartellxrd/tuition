@@ -59,3 +59,9 @@ def signed_course_material_url(path: str, expires_in: int = 300) -> str:
         return result.get("signedURL") or result.get("signedUrl")
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Could not open material.") from exc
+
+def delete_course_material(path: str) -> None:
+    try:
+        _client().storage.from_(COURSE_BUCKET).remove([path])
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Could not remove material file.") from exc
