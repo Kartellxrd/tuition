@@ -44,7 +44,11 @@ def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
     if not user: raise HTTPException(status_code=400, detail="Invalid verification request.")
     token = db.scalar(select(EmailVerificationToken).where(EmailVerificationToken.user_id == user.id, EmailVerificationToken.used_at.is_(None)).order_by(EmailVerificationToken.created_at.desc()))
     now = datetime.now(timezone.utc)
-    if not token or token.expires_at < now or not secrets.compare_digest(token.code_hash, code_hash(payload.code)):
+    if not token or token.expires_at < now or token.attempt_count >= 5:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code.")
+    if not secrets.compare_digest(token.code_hash, code_hash(payload.code)):
+        token.attempt_count += 1
+        db.commit()
         raise HTTPException(status_code=400, detail="Invalid or expired verification code.")
     token.used_at = now; user.email_verified = True
     db.commit(); db.refresh(user)
