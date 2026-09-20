@@ -1,1 +1,12 @@
-import axios from "axios";import * as Keychain from "react-native-keychain";export const api=axios.create({baseURL:"http://10.0.2.2:8000/api/v1",timeout:15000});api.interceptors.request.use(async config=>{const c=await Keychain.getGenericPassword();if(c)config.headers.Authorization=`Bearer ${c.password}`;return config});export async function saveToken(token){await Keychain.setGenericPassword("access_token",token)}export async function clearToken(){await Keychain.resetGenericPassword()}
+import axios from "axios";
+import * as Keychain from "react-native-keychain";
+import {API_URL} from "../config";
+
+export const api=axios.create({baseURL:API_URL,timeout:15000});
+api.interceptors.request.use(async config=>{
+  const credentials=await Keychain.getGenericPassword();
+  if(credentials) config.headers.Authorization=`Bearer ${credentials.password}`;
+  return config;
+});
+export async function saveToken(token){await Keychain.setGenericPassword("access_token",token)}
+export async function clearToken(){await Keychain.resetGenericPassword()}
