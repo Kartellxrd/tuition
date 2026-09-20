@@ -12,3 +12,5 @@ npx @react-native-community/cli@latest init CodeReadyTutors --version 0.81.0 --s
 cp -R "$TMP/CodeReadyTutors/android" "$ROOT/android"
 cp -R "$TMP/CodeReadyTutors/ios" "$ROOT/ios"
 echo "Native React Native 0.81 projects generated. Run npm install, then npm run android."
+
+# Generated native projects remain JavaScript-first; no TypeScript app code is introduced.
