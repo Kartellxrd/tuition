@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.email_verification import EmailVerificationToken
 from app.models.user import User, UserRole\nfrom app.models.password_reset import PasswordResetToken
+from app.services.email import send_verification_code, send_password_reset_code
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserResponse, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest, ResetPasswordRequest
 
 router = APIRouter()
@@ -31,8 +32,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="An account with this email already exists.")
     user = User(name=payload.name.strip(), email=email, password_hash=hash_password(payload.password), role=UserRole.STUDENT)
     db.add(user); db.flush()
-    issue_verification(user, db)
+    code=issue_verification(user, db)
     db.commit(); db.refresh(user)
+    send_verification_code(user.email, code)
     return serialize_user(user)
 
 @router.post("/verify-email", response_model=UserResponse)
@@ -69,7 +71,7 @@ def resend_verification(payload:ResendVerificationRequest,db:Session=Depends(get
     now=datetime.now(timezone.utc)
     if latest and latest.created_at and (now-latest.created_at).total_seconds()<60: raise HTTPException(429,"Please wait before requesting another code.")
     for token in db.scalars(select(EmailVerificationToken).where(EmailVerificationToken.user_id==user.id,EmailVerificationToken.used_at.is_(None))): token.used_at=now
-    issue_verification(user,db);db.commit()
+    code=issue_verification(user,db);db.commit();send_verification_code(user.email,code)
     return {"message":"If verification is required, a new code will be sent."}
 
 @router.post("/forgot-password")
@@ -79,7 +81,7 @@ def forgot_password(payload:ForgotPasswordRequest,db:Session=Depends(get_db)):
         now=datetime.now(timezone.utc)
         for token in db.scalars(select(PasswordResetToken).where(PasswordResetToken.user_id==user.id,PasswordResetToken.used_at.is_(None))): token.used_at=now
         code=f"{secrets.randbelow(1_000_000):06d}"
-        db.add(PasswordResetToken(user_id=user.id,token_hash=code_hash(code),expires_at=now+timedelta(minutes=15)));db.commit()
+        db.add(PasswordResetToken(user_id=user.id,token_hash=code_hash(code),expires_at=now+timedelta(minutes=15)));db.commit();send_password_reset_code(user.email,code)
     return {"message":"If the account exists, password reset instructions will be sent."}
 
 @router.post("/reset-password")
