@@ -10,18 +10,18 @@ from app.models.module import Module
 from app.models.user import User
 from app.services.storage import delete_course_material, signed_course_material_url, upload_course_material
 
-router = APIRouter()
+router = APIRouter()\n\nclass MaterialResponse(BaseModel):\n    model_config=ConfigDict(from_attributes=True)\n    id: UUID\n    module_id: UUID\n    title: str\n    description: str|None\n    category: MaterialCategory\n    original_filename: str\n    mime_type: str\n\ndef public_material(item:Material): return MaterialResponse.model_validate(item)
 
 def active_access(db: Session, user: User, module_id: UUID) -> bool:
     return db.scalar(select(Enrollment.id).where(Enrollment.student_id == user.id, Enrollment.module_id == module_id, Enrollment.status == EnrollmentStatus.ACTIVE)) is not None
 
-@router.get("/module/{module_id}")
+@router.get("/module/{module_id}",response_model=list[MaterialResponse])
 def list_materials(module_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role.value != "TUTOR" and not active_access(db, user, module_id):
         raise HTTPException(403, "Active enrollment required.")
-    return list(db.scalars(select(Material).where(Material.module_id == module_id).order_by(Material.created_at.desc())))
+    return [public_material(x) for x in db.scalars(select(Material).where(Material.module_id == module_id).order_by(Material.created_at.desc()))]
 
-@router.post("/module/{module_id}")
+@router.post("/module/{module_id}",response_model=MaterialResponse)
 async def upload_material(module_id: UUID, title: str = Form(..., min_length=2, max_length=180), category: MaterialCategory = Form(...), description: str | None = Form(None), file: UploadFile = File(...), tutor: User = Depends(require_tutor), db: Session = Depends(get_db)):
     module = db.get(Module, module_id)
     if not module:
@@ -40,7 +40,7 @@ def download_material(material_id: UUID, user: User = Depends(get_current_user),
         raise HTTPException(403, "Active enrollment required.")
     return {"url": signed_course_material_url(item.storage_path), "expires_in": 300, "filename": item.original_filename}
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 class MaterialUpdate(BaseModel):
     title: str | None = Field(None, min_length=2, max_length=180)
     description: str | None = None
