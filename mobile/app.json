@@ -1,1 +1,10 @@
-{"name":"CodeReadyTutors","displayName":"CODE READY TUTORS"}
+{
+  "name": "CodeReadyTutors",
+  "displayName": "CODE READY TUTORS",
+  "android": {
+    "package": "com.anonymous.codereadytutors"
+  },
+  "ios": {
+    "bundleIdentifier": "com.anonymous.codereadytutors"
+  }
+}

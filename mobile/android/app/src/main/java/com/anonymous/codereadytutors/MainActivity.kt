@@ -1,4 +1,4 @@
-package com.codereadytutors
+package com.anonymous.codereadytutors
 import expo.modules.ReactActivityDelegateWrapper
 
 import com.facebook.react.ReactActivity
