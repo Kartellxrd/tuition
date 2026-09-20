@@ -32,3 +32,30 @@ def signed_payment_proof_url(path: str, expires_in: int = 300) -> str:
         return result.get("signedURL") or result.get("signedUrl")
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Could not open payment proof.") from exc
+
+COURSE_BUCKET = "course-materials"
+ALLOWED_MATERIAL_TYPES = {"application/pdf", "image/jpeg", "image/png"}
+MAX_MATERIAL_SIZE = 25 * 1024 * 1024
+
+async def upload_course_material(file: UploadFile, module_id: str) -> tuple[str, str]:
+    if file.content_type not in ALLOWED_MATERIAL_TYPES:
+        raise HTTPException(status_code=400, detail="Material must be PDF, JPG or PNG.")
+    data = await file.read(MAX_MATERIAL_SIZE + 1)
+    if not data or len(data) > MAX_MATERIAL_SIZE:
+        raise HTTPException(status_code=400, detail="Material must be between 1 byte and 25 MB.")
+    original = Path(file.filename or "material").name
+    ext = Path(original).suffix.lower()
+    safe_ext = ext if ext in {".pdf", ".jpg", ".jpeg", ".png"} else ""
+    path = f"{module_id}/{uuid4()}{safe_ext}"
+    try:
+        _client().storage.from_(COURSE_BUCKET).upload(path, data, {"content-type": file.content_type, "upsert": "false"})
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Could not securely store material.") from exc
+    return path, original
+
+def signed_course_material_url(path: str, expires_in: int = 300) -> str:
+    try:
+        result = _client().storage.from_(COURSE_BUCKET).create_signed_url(path, expires_in)
+        return result.get("signedURL") or result.get("signedUrl")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Could not open material.") from exc
