@@ -1,0 +1,29 @@
+name: Native Scaffold
+on:
+  push:
+    branches: [dev/backend-foundation]
+    paths:
+      - ".github/workflows/native-scaffold.yml"
+      - "mobile/scripts/generate-native.sh"
+permissions:
+  contents: write
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev/backend-foundation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.4"
+      - name: Generate Android and iOS projects
+        run: bash mobile/scripts/generate-native.sh
+      - name: Commit native projects
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/android mobile/ios
+          git commit -m "build: generate React Native 0.81 native projects"
+          git push origin dev/backend-foundation
