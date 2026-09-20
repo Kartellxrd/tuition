@@ -1,1 +1,1 @@
-import React from "react";import WelcomeScreen from "./src/screens/WelcomeScreen";export default function App(){return <WelcomeScreen/>}
+import React from"react";import{AuthProvider}from"./src/context/AuthContext";import AppNavigator from"./src/navigation/AppNavigator";export default function App(){return <AuthProvider><AppNavigator/></AuthProvider>}
