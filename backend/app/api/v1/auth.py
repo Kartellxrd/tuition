@@ -83,6 +83,8 @@ def forgot_password(payload:ForgotPasswordRequest,db:Session=Depends(get_db)):
     user=db.scalar(select(User).where(User.email==payload.email.lower().strip()))
     if user and user.active:
         now=datetime.now(timezone.utc)
+        latest=db.scalar(select(PasswordResetToken).where(PasswordResetToken.user_id==user.id).order_by(PasswordResetToken.created_at.desc()))
+        if latest and latest.created_at and (now-latest.created_at).total_seconds()<60: return {"message":"If the account exists, password reset instructions will be sent."}
         for token in db.scalars(select(PasswordResetToken).where(PasswordResetToken.user_id==user.id,PasswordResetToken.used_at.is_(None))): token.used_at=now
         code=f"{secrets.randbelow(1_000_000):06d}"
         db.add(PasswordResetToken(user_id=user.id,token_hash=code_hash(code),expires_at=now+timedelta(minutes=15)));db.commit();send_password_reset_code(user.email,code)
@@ -94,6 +96,8 @@ def reset_password(payload:ResetPasswordRequest,db:Session=Depends(get_db)):
     if not user: raise HTTPException(400,"Invalid or expired reset code.")
     token=db.scalar(select(PasswordResetToken).where(PasswordResetToken.user_id==user.id,PasswordResetToken.used_at.is_(None)).order_by(PasswordResetToken.created_at.desc()))
     now=datetime.now(timezone.utc)
-    if not token or token.expires_at<now or not secrets.compare_digest(token.token_hash,code_hash(payload.code)): raise HTTPException(400,"Invalid or expired reset code.")
+    if not token or token.expires_at<now or token.attempt_count>=5: raise HTTPException(400,"Invalid or expired reset code.")
+    if not secrets.compare_digest(token.token_hash,code_hash(payload.code)):
+        token.attempt_count+=1;db.commit();raise HTTPException(400,"Invalid or expired reset code.")
     user.password_hash=hash_password(payload.new_password);token.used_at=now;db.commit()
     return {"message":"Password updated successfully."}
