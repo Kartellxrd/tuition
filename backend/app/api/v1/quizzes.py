@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.quiz import Quiz, QuizQuestion, QuestionOption, QuizAttempt, QuizAttemptAnswer
 from app.models.user import User
+from app.models.module import Module
 router=APIRouter()
 def can_access(db,user,module_id):
     return db.scalar(select(Enrollment.id).where(Enrollment.student_id==user.id,Enrollment.module_id==module_id,Enrollment.status==EnrollmentStatus.ACTIVE)) is not None
@@ -37,6 +38,9 @@ class QuizCreate(BaseModel):
 
 @router.post("/admin/create")
 def create_quiz(payload:QuizCreate,tutor:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    module=db.get(Module,payload.module_id)
+    if not module or not module.active: raise HTTPException(404,"Module not found.")
+    if not payload.title.strip(): raise HTTPException(400,"Quiz title is required.")
     if not payload.questions: raise HTTPException(400,"Quiz requires at least one question.")
     quiz=Quiz(module_id=payload.module_id,title=payload.title.strip(),instructions=payload.instructions,created_by=tutor.id,published=False)
     db.add(quiz);db.flush()
@@ -81,6 +85,7 @@ def submit(quiz_id:UUID,payload:SubmitIn,user:User=Depends(get_current_user),db:
     quiz=db.scalar(select(Quiz).options(selectinload(Quiz.questions).selectinload(QuizQuestion.options)).where(Quiz.id==quiz_id,Quiz.published.is_(True)))
     if not quiz: raise HTTPException(404,"Quiz not found.")
     if not can_access(db,user,quiz.module_id): raise HTTPException(403,"Active enrollment required.")
+    if len({a.question_id for a in payload.answers}) != len(payload.answers): raise HTTPException(400,"Each question may only be answered once.")
     supplied={a.question_id:a.option_id for a in payload.answers}; score=0; total=sum(q.marks for q in quiz.questions); rows=[]
     for q in quiz.questions:
         selected=supplied.get(q.id); valid={o.id:o for o in q.options}
@@ -91,3 +96,24 @@ def submit(quiz_id:UUID,payload:SubmitIn,user:User=Depends(get_current_user),db:
     for q,selected,awarded in rows: db.add(QuizAttemptAnswer(attempt_id=attempt.id,question_id=q.id,selected_option_id=selected,awarded_marks=awarded))
     db.commit();db.refresh(attempt);return {"attempt_id":attempt.id,"score":score,"total":total,"percentage":percentage,"submitted_at":attempt.submitted_at}
 
+
+class QuizUpdate(BaseModel):
+    title:str|None=None
+    instructions:str|None=None
+
+@router.patch("/admin/{quiz_id}")
+def update_quiz(quiz_id:UUID,payload:QuizUpdate,_:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    quiz=db.get(Quiz,quiz_id)
+    if not quiz: raise HTTPException(404,"Quiz not found.")
+    data=payload.model_dump(exclude_unset=True)
+    if "title" in data:
+        if not data["title"].strip(): raise HTTPException(400,"Quiz title is required.")
+        quiz.title=data["title"].strip()
+    if "instructions" in data: quiz.instructions=data["instructions"]
+    db.commit();db.refresh(quiz);return {"id":quiz.id,"title":quiz.title,"instructions":quiz.instructions,"published":quiz.published}
+
+@router.delete("/admin/{quiz_id}",status_code=204)
+def delete_quiz(quiz_id:UUID,_:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    quiz=db.get(Quiz,quiz_id)
+    if not quiz: raise HTTPException(404,"Quiz not found.")
+    db.delete(quiz);db.commit()
