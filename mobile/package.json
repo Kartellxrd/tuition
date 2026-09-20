@@ -5,7 +5,9 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start"
+    "start": "react-native start",
+    "android:release": "cd android && ./gradlew assembleRelease",
+    "test:doctor": "npx react-native doctor"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.0.0",
@@ -20,13 +22,13 @@
     "@react-native-documents/picker": "^10.1.0"
   },
   "devDependencies": {
-    "@react-native-community/cli": "latest",
-    "@react-native-community/cli-platform-android": "latest",
-    "@react-native-community/cli-platform-ios": "latest",
-    "@react-native/babel-preset": "latest",
+    "@react-native-community/cli": "^20.0.0",
+    "@react-native-community/cli-platform-android": "^20.0.0",
+    "@react-native-community/cli-platform-ios": "^20.0.0",
+    "@react-native/babel-preset": "^0.81.0",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
-    "@react-native/metro-config": "latest"
+    "@react-native/metro-config": "^0.81.0"
   },
   "engines": {
     "node": ">=20"
