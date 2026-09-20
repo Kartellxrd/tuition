@@ -4,5 +4,6 @@ from app.models.enrollment import Enrollment
 from app.models.email_verification import EmailVerificationToken
 from app.models.material import Material
 from app.models.announcement import Announcement
+from app.models.session import Session
 
-__all__ = ["User","Module","Enrollment","EmailVerificationToken","Material","Announcement"]
+__all__ = ["User","Module","Enrollment","EmailVerificationToken","Material","Announcement","Session"]
