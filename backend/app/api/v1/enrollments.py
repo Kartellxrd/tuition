@@ -14,7 +14,7 @@ from app.services.storage import signed_payment_proof_url, upload_payment_proof
 router = APIRouter()
 
 def serialize(e: Enrollment) -> EnrollmentResponse:
-    return EnrollmentResponse(id=e.id, student_id=e.student_id, module_id=e.module_id, tier=e.tier, status=e.status, expected_price=e.expected_price, payment_reference=e.payment_reference, proof_of_payment_storage_path=e.proof_of_payment_storage_path, rejection_reason=e.rejection_reason, reviewed_at=e.reviewed_at, reviewed_by=e.reviewed_by, created_at=e.created_at)
+    return EnrollmentResponse(id=e.id, student_id=e.student_id, module_id=e.module_id, tier=e.tier, status=e.status, expected_price=e.expected_price, payment_reference=e.payment_reference, rejection_reason=e.rejection_reason, reviewed_at=e.reviewed_at, reviewed_by=e.reviewed_by, created_at=e.created_at)
 
 @router.post("", response_model=EnrollmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_enrollment(module_id: UUID = Form(...), tier: EnrollmentTier = Form(...), payment_reference: str = Form(..., min_length=2, max_length=120), proof: UploadFile = File(...), user: User = Depends(get_current_user), db: Session = Depends(get_db)):
