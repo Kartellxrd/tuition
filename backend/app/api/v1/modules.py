@@ -3,6 +3,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app.core.database import get_db
+from app.api.dependencies import require_tutor
+from app.models.user import User
+from pydantic import BaseModel, Field
+from decimal import Decimal
 from app.models.module import Module
 from app.schemas.module import ModuleResponse
 
@@ -18,3 +22,21 @@ def get_module(module_id: UUID, db: Session = Depends(get_db)):
     if not module or not module.active:
         raise HTTPException(status_code=404, detail="Module not found.")
     return module
+
+class ModuleAdminUpdate(BaseModel):
+    name:str|None=Field(None,min_length=2,max_length=160)
+    description:str|None=None
+    group_price:Decimal|None=Field(None,gt=0)
+    one_on_one_price:Decimal|None=Field(None,gt=0)
+    active:bool|None=None
+
+@router.get("/admin/all", response_model=list[ModuleResponse])
+def admin_modules(_:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    return list(db.scalars(select(Module).order_by(Module.code)))
+
+@router.patch("/admin/{module_id}", response_model=ModuleResponse)
+def update_module(module_id:UUID,payload:ModuleAdminUpdate,_:User=Depends(require_tutor),db:Session=Depends(get_db)):
+    module=db.get(Module,module_id)
+    if not module: raise HTTPException(404,"Module not found.")
+    for key,value in payload.model_dump(exclude_unset=True).items(): setattr(module,key,value.strip() if isinstance(value,str) else value)
+    db.commit();db.refresh(module);return module
