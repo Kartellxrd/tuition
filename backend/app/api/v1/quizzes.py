@@ -82,6 +82,7 @@ def load_quiz(quiz_id:UUID,user:User=Depends(get_current_user),db:Session=Depend
     return {"id":quiz.id,"module_id":quiz.module_id,"title":quiz.title,"instructions":quiz.instructions,"questions":[{"id":q.id,"prompt":q.prompt,"marks":q.marks,"position":q.position,"options":[{"id":o.id,"text":o.text,"position":o.position} for o in q.options]} for q in quiz.questions]}
 @router.post("/{quiz_id}/submit")
 def submit(quiz_id:UUID,payload:SubmitIn,user:User=Depends(get_current_user),db:Session=Depends(get_db)):
+    if user.role.value!="STUDENT": raise HTTPException(403,"Student account required.")
     quiz=db.scalar(select(Quiz).options(selectinload(Quiz.questions).selectinload(QuizQuestion.options)).where(Quiz.id==quiz_id,Quiz.published.is_(True)))
     if not quiz: raise HTTPException(404,"Quiz not found.")
     if not can_access(db,user,quiz.module_id): raise HTTPException(403,"Active enrollment required.")
