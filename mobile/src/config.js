@@ -1,0 +1,1 @@
+import{Platform}from"react-native";const devHost=Platform.OS==="android"?"10.0.2.2":"localhost";export const API_URL=__DEV__?`http://${devHost}:8000/api/v1`:"https://REPLACE_WITH_RENDER_API/api/v1";
