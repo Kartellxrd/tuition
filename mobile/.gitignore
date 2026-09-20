@@ -5,3 +5,8 @@ ios/Pods/
 *.jks
 *.keystore
 .env
+
+# Expo
+.expo
+dist/
+web-build/
