@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile\nfrom pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user, require_tutor
@@ -29,7 +29,7 @@ async def upload_material(module_id: UUID, title: str = Form(..., min_length=2, 
     path, original = await upload_course_material(file, str(module_id))
     item = Material(module_id=module_id, title=title.strip(), description=description.strip() if description else None, category=category, storage_path=path, original_filename=original, mime_type=file.content_type or "application/octet-stream", uploaded_by=tutor.id)
     db.add(item); db.commit(); db.refresh(item)
-    return item
+    return public_material(item)
 
 @router.get("/{material_id}/download")
 def download_material(material_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -40,7 +40,6 @@ def download_material(material_id: UUID, user: User = Depends(get_current_user),
         raise HTTPException(403, "Active enrollment required.")
     return {"url": signed_course_material_url(item.storage_path), "expires_in": 300, "filename": item.original_filename}
 
-from pydantic import BaseModel, Field, ConfigDict
 class MaterialUpdate(BaseModel):
     title: str | None = Field(None, min_length=2, max_length=180)
     description: str | None = None
@@ -52,7 +51,7 @@ def update_material(material_id: UUID, payload: MaterialUpdate, _: User = Depend
     if not item: raise HTTPException(404,"Material not found.")
     for key,value in payload.model_dump(exclude_unset=True).items():
         setattr(item,key,value.strip() if isinstance(value,str) else value)
-    db.commit();db.refresh(item);return item
+    db.commit();db.refresh(item);return public_material(item)
 
 @router.delete("/{material_id}",status_code=204)
 def delete_material(material_id: UUID, _: User = Depends(require_tutor), db: Session = Depends(get_db)):
