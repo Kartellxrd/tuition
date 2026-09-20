@@ -28,7 +28,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20.19.4"
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npx react-native bundle --platform android --entry-file index.js --dev false --bundle-output /tmp/index.android.bundle --assets-dest /tmp/assets
