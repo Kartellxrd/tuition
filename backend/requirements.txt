@@ -37,3 +37,4 @@ websockets==17.1
 supabase>=2.20.0,<3.0.0
 
 pwdlib[argon2]>=0.3.0,<1.0.0
+pytest>=8.0,<9.0
