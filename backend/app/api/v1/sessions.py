@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.models.enrollment import Enrollment, EnrollmentStatus, EnrollmentTier
 from app.models.session import Session, SessionMode, SessionStatus
 from app.models.user import User
+from app.models.module import Module
 router=APIRouter()
 class SessionCreate(BaseModel):
     module_id:UUID; tier:EnrollmentTier; enrollment_id:UUID|None=None; title:str=Field(min_length=2,max_length=180); notes:str|None=None; start_at:datetime; end_at:datetime; mode:SessionMode; location:str|None=None; meeting_link:str|None=None
@@ -20,6 +21,8 @@ class SessionCreate(BaseModel):
         return self
 @router.post("")
 def create_session(payload:SessionCreate,tutor:User=Depends(require_tutor),db:DBSession=Depends(get_db)):
+    module=db.get(Module,payload.module_id)
+    if not module or not module.active: raise HTTPException(404,"Module not found.")
     if payload.tier==EnrollmentTier.ONE_ON_ONE:
         e=db.get(Enrollment,payload.enrollment_id)
         if not e or e.status!=EnrollmentStatus.ACTIVE or e.module_id!=payload.module_id or e.tier!=EnrollmentTier.ONE_ON_ONE: raise HTTPException(400,"A matching active one-on-one enrollment is required.")
