@@ -1,1 +1,0 @@
-import "./globals.css";export const metadata={title:"Code Ready Tutors",description:"Learn. Code. Succeed."};export default function RootLayout({children}){return <html lang="en"><body>{children}</body></html>}
