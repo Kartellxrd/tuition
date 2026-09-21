@@ -1,67 +1,61 @@
 import React,{useEffect,useRef}from"react";
 import{Animated,SafeAreaView,ScrollView,StyleSheet,Text,TouchableOpacity,View,useWindowDimensions}from"react-native";
 
-const modules=[
- {code:"CSI141",title:"Programming Principles",tag:"CODE"},
- {code:"CSI161",title:"Introduction to Computing",tag:"COMPUTING"}
-];
+const Feature=({icon,title,copy})=><View style={s.feature}><View style={s.iconBox}><Text style={s.icon}>{icon}</Text></View><View style={{flex:1}}><Text style={s.featureTitle}>{title}</Text><Text style={s.featureCopy}>{copy}</Text></View></View>;
 
 export default function WelcomeScreen({navigation}){
- const{width}=useWindowDimensions();const compact=width<370;
- const fade=useRef(new Animated.Value(0)).current;
- const lift=useRef(new Animated.Value(18)).current;
- const orb=useRef(new Animated.Value(0)).current;
- useEffect(()=>{
-  Animated.parallel([Animated.timing(fade,{toValue:1,duration:550,useNativeDriver:true}),Animated.spring(lift,{toValue:0,tension:55,friction:9,useNativeDriver:true})]).start();
-  Animated.loop(Animated.sequence([Animated.timing(orb,{toValue:1,duration:2600,useNativeDriver:true}),Animated.timing(orb,{toValue:0,duration:2600,useNativeDriver:true})])).start();
- },[]);
- const drift=orb.interpolate({inputRange:[0,1],outputRange:[0,16]});
+ const{width}=useWindowDimensions();const small=width<370;
+ const intro=useRef(new Animated.Value(0)).current,up=useRef(new Animated.Value(20)).current,float=useRef(new Animated.Value(0)).current;
+ useEffect(()=>{Animated.parallel([Animated.timing(intro,{toValue:1,duration:600,useNativeDriver:true}),Animated.spring(up,{toValue:0,tension:48,friction:8,useNativeDriver:true})]).start();Animated.loop(Animated.sequence([Animated.timing(float,{toValue:1,duration:2200,useNativeDriver:true}),Animated.timing(float,{toValue:0,duration:2200,useNativeDriver:true})])).start()},[]);
+ const glowY=float.interpolate({inputRange:[0,1],outputRange:[0,22]});
  return <SafeAreaView style={s.page}>
-  <Animated.View pointerEvents="none" style={[s.orb,{transform:[{translateY:drift}]}]}/>
-  <ScrollView contentContainerStyle={[s.content,{paddingHorizontal:compact?18:22}]} showsVerticalScrollIndicator={false}>
-   <View style={s.nav}>
-    <View><Text style={s.logo}>CODE READY</Text><Text style={s.logoSub}>TUTORS</Text></View>
-    <TouchableOpacity onPress={()=>navigation.navigate("Login")} style={s.navButton}><Text style={s.navButtonText}>Sign in</Text></TouchableOpacity>
-   </View>
-
-   <Animated.View style={[s.hero,{opacity:fade,transform:[{translateY:lift}]}]}>
-    <View style={s.badge}><View style={s.badgeDot}/><Text style={s.badgeText}>BUILT FOR FIRST-YEAR STUDENTS</Text></View>
-    <Text style={[s.headline,{fontSize:compact?39:45}]}>Learn code.</Text>
-    <Text style={[s.headline,{fontSize:compact?39:45}]}>Think <Text style={s.cyan}>smarter.</Text></Text>
-    <Text style={[s.headline,{fontSize:compact?39:45}]}>Stay ahead.</Text>
-    <Text style={s.subhead}>Focused tutoring for CSI141 and CSI161 — clear explanations, practical work and exam-ready preparation.</Text>
-    <View style={s.actions}>
-     <TouchableOpacity activeOpacity={.86} onPress={()=>navigation.navigate("Register")} style={s.primary}><Text style={s.primaryText}>Get started</Text><Text style={s.arrow}>→</Text></TouchableOpacity>
-     <TouchableOpacity activeOpacity={.8} onPress={()=>navigation.navigate("Login")} style={s.textButton}><Text style={s.textButtonText}>I already have an account</Text></TouchableOpacity>
+  <Animated.View pointerEvents="none" style={[s.glow,{transform:[{translateY:glowY}]}]}/>
+  <View style={s.nav}>
+   <TouchableOpacity activeOpacity={.8}><View style={s.mark}><Text style={s.markText}>C</Text></View></TouchableOpacity>
+   <View style={s.navCenter}><Text style={s.navBrand}>CODE READY</Text><Text style={s.navSub}>TUTORS</Text></View>
+   <TouchableOpacity style={s.loginPill} onPress={()=>navigation.navigate("Login")}><Text style={s.loginText}>Login</Text></TouchableOpacity>
+  </View>
+  <ScrollView contentContainerStyle={[s.content,{paddingHorizontal:small?17:21}]} showsVerticalScrollIndicator={false}>
+   <Animated.View style={[s.hero,{opacity:intro,transform:[{translateY:up}]}]}>
+    <View style={s.status}><View style={s.statusDot}/><Text style={s.statusText}>YOUR STUDY EDGE</Text></View>
+    <Text style={[s.heroTitle,{fontSize:small?43:50}]}>Don't just study.</Text>
+    <Text style={[s.heroTitle,{fontSize:small?43:50}]}>Get <Text style={s.heroAccent}>Code Ready.</Text></Text>
+    <Text style={s.heroCopy}>A smarter learning space for first-year students taking CSI141 and CSI161. Learn the concept. Practice it. Own it.</Text>
+    <View style={s.heroActions}>
+     <TouchableOpacity activeOpacity={.86} style={s.startButton} onPress={()=>navigation.navigate("Register")}><Text style={s.startText}>Start learning</Text><View style={s.arrowCircle}><Text style={s.arrow}>↗</Text></View></TouchableOpacity>
+     <TouchableOpacity style={s.learnButton}><Text style={s.learnText}>See how it works</Text></TouchableOpacity>
     </View>
-    <View style={s.trustRow}><Text style={s.trustStrong}>CSI141</Text><Text style={s.sep}>•</Text><Text style={s.trustStrong}>CSI161</Text><Text style={s.sep}>•</Text><Text style={s.trust}>P150 / module</Text></View>
+    <View style={s.microStats}><View><Text style={s.statValue}>2</Text><Text style={s.statLabel}>CORE MODULES</Text></View><View style={s.statRule}/><View><Text style={s.statValue}>P150</Text><Text style={s.statLabel}>PER MODULE</Text></View><View style={s.statRule}/><View><Text style={s.statValue}>01</Text><Text style={s.statLabel}>CLEAR GOAL</Text></View></View>
    </Animated.View>
 
+   <View style={s.marquee}><Text style={s.marqueeText}>CSI141  /  CSI161  /  PRACTICE  /  UNDERSTAND  /  PERFORM</Text></View>
+
    <View style={s.section}>
-    <Text style={s.overline}>WHAT WE TEACH</Text><Text style={s.sectionTitle}>Two modules. One clear goal.</Text><Text style={s.sectionCopy}>Build the foundation you need to understand the work, solve problems and walk into assessments prepared.</Text>
-    <View style={s.moduleRow}>{modules.map(m=><View key={m.code} style={s.moduleCard}><Text style={s.moduleTag}>{m.tag}</Text><Text style={s.moduleCode}>{m.code}</Text><Text style={s.moduleTitle}>{m.title}</Text><View style={s.cardLine}/><Text style={s.moduleLink}>Explore learning →</Text></View>)}</View>
+    <Text style={s.index}>01 — THE MODULES</Text><Text style={s.sectionTitle}>Built around what you're actually studying.</Text>
+    <View style={s.courseCard}><View style={s.courseTop}><Text style={s.courseNo}>01</Text><Text style={s.courseTag}>PROGRAMMING</Text></View><Text style={s.courseCode}>CSI141</Text><Text style={s.courseName}>Programming Principles</Text><Text style={s.courseCopy}>From logic to code — build the thinking habits that make programming click.</Text><View style={s.courseBottom}><Text style={s.courseMeta}>LEARN • PRACTICE • REPEAT</Text><Text style={s.courseArrow}>↗</Text></View></View>
+    <View style={[s.courseCard,s.courseAlt]}><View style={s.courseTop}><Text style={s.courseNo}>02</Text><Text style={s.courseTag}>COMPUTING</Text></View><Text style={s.courseCode}>CSI161</Text><Text style={s.courseName}>Introduction to Computing</Text><Text style={s.courseCopy}>Turn computing fundamentals into knowledge you can explain, apply and remember.</Text><View style={s.courseBottom}><Text style={s.courseMeta}>UNDERSTAND • APPLY • GROW</Text><Text style={s.courseArrow}>↗</Text></View></View>
    </View>
 
    <View style={s.section}>
-    <Text style={s.overline}>THE CODE READY METHOD</Text><Text style={s.sectionTitle}>No noise. Just progress.</Text>
-    <View style={s.method}>
-     <View style={s.step}><Text style={s.stepNo}>01</Text><View style={s.stepBody}><Text style={s.stepTitle}>Understand</Text><Text style={s.stepCopy}>Concepts broken down into language that actually makes sense.</Text></View></View>
-     <View style={s.step}><Text style={s.stepNo}>02</Text><View style={s.stepBody}><Text style={s.stepTitle}>Practice</Text><Text style={s.stepCopy}>Work through examples, problems and past-question style exercises.</Text></View></View>
-     <View style={[s.step,{borderBottomWidth:0}]}><Text style={s.stepNo}>03</Text><View style={s.stepBody}><Text style={s.stepTitle}>Perform</Text><Text style={s.stepCopy}>Build confidence for quizzes, tests and exams.</Text></View></View>
-    </View>
+    <Text style={s.index}>02 — WHY CODE READY</Text><Text style={s.sectionTitle}>Less confusion. More momentum.</Text>
+    <View style={s.featureWrap}><Feature icon="⌘" title="Made for your modules" copy="Focused support for the exact first-year content you're learning."/><Feature icon="↗" title="Exam-minded practice" copy="Work through practical examples and assessment-style questions."/><Feature icon="◎" title="Learn at your pace" copy="Group learning and one-on-one support when you need more focus."/></View>
    </View>
 
-   <View style={s.cta}><Text style={s.ctaMini}>READY WHEN YOU ARE</Text><Text style={s.ctaTitle}>Your first year sets the foundation.</Text><Text style={s.ctaCopy}>Make it count with focused support built around your modules.</Text><TouchableOpacity onPress={()=>navigation.navigate("Register")} style={s.ctaButton}><Text style={s.ctaButtonText}>Create student account</Text><Text style={s.ctaArrow}>→</Text></TouchableOpacity></View>
-   <View style={s.footer}><Text style={s.footerBrand}>CODE READY TUTORS</Text><Text style={s.footerText}>LEARN • CODE • SUCCEED</Text></View>
+   <View style={s.priceCard}><Text style={s.priceEyebrow}>SIMPLE PRICING</Text><View style={s.priceRow}><View><Text style={s.price}>P150</Text><Text style={s.priceSub}>PER MODULE</Text></View><Text style={s.priceCopy}>Straightforward tutoring.{"\n"}No complicated plans.</Text></View></View>
+
+   <View style={s.finalCard}><Text style={s.finalMini}>YOUR MOVE.</Text><Text style={s.finalTitle}>Ready to make first year hit different?</Text><Text style={s.finalCopy}>Create your student account and start building a stronger foundation.</Text><TouchableOpacity style={s.finalButton} onPress={()=>navigation.navigate("Register")}><Text style={s.finalButtonText}>Create account</Text><Text style={s.finalArrow}>→</Text></TouchableOpacity><TouchableOpacity onPress={()=>navigation.navigate("Login")}><Text style={s.member}>Already a member? <Text style={s.memberAccent}>Sign in</Text></Text></TouchableOpacity></View>
+   <View style={s.footer}><View style={s.footerMark}><Text style={s.footerMarkText}>C</Text></View><Text style={s.footerBrand}>CODE READY TUTORS</Text><Text style={s.footerTiny}>LEARN. CODE. SUCCEED.</Text></View>
   </ScrollView>
  </SafeAreaView>
 }
 const s=StyleSheet.create({
- page:{flex:1,backgroundColor:"#030712"},content:{paddingBottom:34,maxWidth:620,width:"100%",alignSelf:"center"},orb:{position:"absolute",top:80,right:-110,width:240,height:240,borderRadius:120,backgroundColor:"#083344",opacity:.28},
- nav:{height:78,flexDirection:"row",alignItems:"center",justifyContent:"space-between"},logo:{color:"#F8FAFC",fontSize:16,fontWeight:"900",letterSpacing:1.4},logoSub:{color:"#22D3EE",fontSize:8,fontWeight:"800",letterSpacing:5},navButton:{borderWidth:1,borderColor:"#1E3A4A",borderRadius:20,paddingHorizontal:16,paddingVertical:8},navButtonText:{color:"#DFFBFF",fontSize:13,fontWeight:"700"},
- hero:{paddingTop:35,paddingBottom:52},badge:{alignSelf:"flex-start",flexDirection:"row",alignItems:"center",backgroundColor:"#071725",borderWidth:1,borderColor:"#12394A",paddingHorizontal:10,paddingVertical:7,borderRadius:20,marginBottom:22},badgeDot:{width:5,height:5,borderRadius:3,backgroundColor:"#22D3EE",marginRight:7},badgeText:{color:"#8FEAF5",fontSize:8,fontWeight:"800",letterSpacing:1.3},headline:{color:"#F8FAFC",fontWeight:"900",lineHeight:49,letterSpacing:-1.5},cyan:{color:"#22D3EE"},subhead:{color:"#94A3B8",fontSize:15,lineHeight:23,maxWidth:500,marginTop:20},actions:{alignItems:"flex-start",marginTop:25},primary:{height:48,minWidth:148,flexDirection:"row",alignItems:"center",justifyContent:"center",backgroundColor:"#22D3EE",borderRadius:13,paddingHorizontal:20},primaryText:{color:"#03131B",fontSize:14,fontWeight:"900"},arrow:{color:"#03131B",fontSize:19,marginLeft:14},textButton:{paddingVertical:14},textButtonText:{color:"#A5F3FC",fontSize:12,fontWeight:"700"},trustRow:{flexDirection:"row",alignItems:"center",flexWrap:"wrap",marginTop:13},trustStrong:{color:"#E2E8F0",fontSize:11,fontWeight:"800"},trust:{color:"#64748B",fontSize:11},sep:{color:"#164E63",marginHorizontal:8},
- section:{paddingVertical:38,borderTopWidth:1,borderTopColor:"#111C2C"},overline:{color:"#22D3EE",fontSize:9,fontWeight:"900",letterSpacing:2.1,marginBottom:9},sectionTitle:{color:"#F8FAFC",fontSize:27,lineHeight:33,fontWeight:"900",letterSpacing:-.5},sectionCopy:{color:"#718096",fontSize:13,lineHeight:20,marginTop:10,marginBottom:20},moduleRow:{gap:10},moduleCard:{backgroundColor:"#07111F",borderWidth:1,borderColor:"#132337",borderRadius:16,padding:18,marginBottom:10},moduleTag:{color:"#64748B",fontSize:8,fontWeight:"900",letterSpacing:1.5},moduleCode:{color:"#22D3EE",fontSize:23,fontWeight:"900",marginTop:13},moduleTitle:{color:"#E2E8F0",fontSize:14,fontWeight:"700",marginTop:2},cardLine:{height:1,backgroundColor:"#12263A",marginVertical:15},moduleLink:{color:"#78909C",fontSize:11,fontWeight:"600"},
- method:{marginTop:18,backgroundColor:"#07111F",borderRadius:16,borderWidth:1,borderColor:"#132337",paddingHorizontal:17},step:{flexDirection:"row",paddingVertical:18,borderBottomWidth:1,borderBottomColor:"#132337"},stepNo:{color:"#22D3EE",fontSize:10,fontWeight:"900",marginRight:16,marginTop:3},stepBody:{flex:1},stepTitle:{color:"#F1F5F9",fontSize:15,fontWeight:"800"},stepCopy:{color:"#718096",fontSize:12,lineHeight:18,marginTop:4},
- cta:{marginTop:12,backgroundColor:"#071725",borderWidth:1,borderColor:"#155E75",borderRadius:20,padding:22},ctaMini:{color:"#22D3EE",fontSize:8,fontWeight:"900",letterSpacing:2},ctaTitle:{color:"#F8FAFC",fontSize:25,lineHeight:31,fontWeight:"900",marginTop:10},ctaCopy:{color:"#8B9BAD",fontSize:13,lineHeight:20,marginTop:8},ctaButton:{alignSelf:"flex-start",height:45,flexDirection:"row",alignItems:"center",backgroundColor:"#F8FAFC",borderRadius:12,paddingHorizontal:17,marginTop:20},ctaButtonText:{color:"#06111F",fontSize:12,fontWeight:"900"},ctaArrow:{color:"#06111F",fontSize:17,marginLeft:12},
- footer:{paddingTop:32,alignItems:"center"},footerBrand:{color:"#CBD5E1",fontSize:10,fontWeight:"900",letterSpacing:1.7},footerText:{color:"#475569",fontSize:8,fontWeight:"700",letterSpacing:2,marginTop:5}
+ page:{flex:1,backgroundColor:"#05070D"},glow:{position:"absolute",top:110,right:-120,width:280,height:280,borderRadius:140,backgroundColor:"#073D4B",opacity:.24},
+ nav:{height:68,paddingHorizontal:20,flexDirection:"row",alignItems:"center",justifyContent:"space-between",borderBottomWidth:1,borderBottomColor:"#121722",backgroundColor:"rgba(5,7,13,.96)"},mark:{width:34,height:34,borderRadius:10,borderWidth:1,borderColor:"#22D3EE",alignItems:"center",justifyContent:"center",transform:[{rotate:"-5deg"}]},markText:{color:"#22D3EE",fontSize:19,fontWeight:"900"},navCenter:{position:"absolute",left:0,right:0,alignItems:"center",pointerEvents:"none"},navBrand:{color:"#F8FAFC",fontSize:11,fontWeight:"900",letterSpacing:1.8},navSub:{color:"#22D3EE",fontSize:6,fontWeight:"900",letterSpacing:4,marginTop:1},loginPill:{height:34,paddingHorizontal:15,borderRadius:17,backgroundColor:"#111722",alignItems:"center",justifyContent:"center"},loginText:{color:"#E2E8F0",fontSize:12,fontWeight:"800"},
+ content:{width:"100%",maxWidth:600,alignSelf:"center",paddingBottom:32},hero:{paddingTop:52,paddingBottom:42},status:{flexDirection:"row",alignItems:"center",alignSelf:"flex-start",marginBottom:21},statusDot:{width:6,height:6,borderRadius:3,backgroundColor:"#22D3EE",marginRight:8},statusText:{color:"#5EE8F5",fontSize:9,fontWeight:"900",letterSpacing:2},heroTitle:{color:"#F8FAFC",fontWeight:"900",lineHeight:53,letterSpacing:-2.1},heroAccent:{color:"#22D3EE"},heroCopy:{color:"#8D99AA",fontSize:15,lineHeight:23,marginTop:22,maxWidth:500},heroActions:{flexDirection:"row",alignItems:"center",marginTop:27},startButton:{height:47,flexDirection:"row",alignItems:"center",backgroundColor:"#EAFDFF",borderRadius:24,paddingLeft:20,paddingRight:7},startText:{color:"#061017",fontSize:13,fontWeight:"900"},arrowCircle:{width:33,height:33,borderRadius:17,backgroundColor:"#22D3EE",alignItems:"center",justifyContent:"center",marginLeft:13},arrow:{color:"#041014",fontSize:16,fontWeight:"900"},learnButton:{paddingVertical:12,paddingHorizontal:14},learnText:{color:"#7DDDE7",fontSize:11,fontWeight:"700"},microStats:{marginTop:42,flexDirection:"row",alignItems:"center",justifyContent:"space-between",borderTopWidth:1,borderTopColor:"#151C28",paddingTop:19},statValue:{color:"#F8FAFC",fontSize:17,fontWeight:"900"},statLabel:{color:"#586474",fontSize:7,fontWeight:"800",letterSpacing:1,marginTop:3},statRule:{height:28,width:1,backgroundColor:"#1A2432"},
+ marquee:{marginHorizontal:-21,borderTopWidth:1,borderBottomWidth:1,borderColor:"#12313B",paddingVertical:11,overflow:"hidden"},marqueeText:{color:"#22D3EE",fontSize:9,fontWeight:"900",letterSpacing:2,textAlign:"center"},
+ section:{paddingTop:48,paddingBottom:12},index:{color:"#22D3EE",fontSize:8,fontWeight:"900",letterSpacing:2,marginBottom:10},sectionTitle:{color:"#F4F7FA",fontSize:28,lineHeight:34,fontWeight:"900",letterSpacing:-.7,marginBottom:23},courseCard:{backgroundColor:"#0A101A",borderRadius:20,borderWidth:1,borderColor:"#182331",padding:20,marginBottom:12},courseAlt:{backgroundColor:"#07141A",borderColor:"#12343D"},courseTop:{flexDirection:"row",justifyContent:"space-between",alignItems:"center"},courseNo:{color:"#465568",fontSize:10,fontWeight:"800"},courseTag:{color:"#66808A",fontSize:8,fontWeight:"900",letterSpacing:1.4},courseCode:{color:"#22D3EE",fontSize:31,fontWeight:"900",marginTop:27,letterSpacing:-1},courseName:{color:"#F1F5F9",fontSize:16,fontWeight:"800",marginTop:2},courseCopy:{color:"#758396",fontSize:12,lineHeight:19,marginTop:11},courseBottom:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginTop:24,paddingTop:14,borderTopWidth:1,borderTopColor:"#172331"},courseMeta:{color:"#4F6372",fontSize:7,fontWeight:"900",letterSpacing:1.3},courseArrow:{color:"#22D3EE",fontSize:17},
+ featureWrap:{backgroundColor:"#090E17",borderRadius:20,borderWidth:1,borderColor:"#171F2B",paddingHorizontal:17},feature:{flexDirection:"row",paddingVertical:19,borderBottomWidth:1,borderBottomColor:"#151E2A"},iconBox:{width:36,height:36,borderRadius:11,backgroundColor:"#0B2730",alignItems:"center",justifyContent:"center",marginRight:13},icon:{color:"#22D3EE",fontSize:17,fontWeight:"900"},featureTitle:{color:"#EAF0F6",fontSize:14,fontWeight:"800"},featureCopy:{color:"#687789",fontSize:11,lineHeight:17,marginTop:4},
+ priceCard:{marginTop:38,borderRadius:20,backgroundColor:"#22D3EE",padding:21},priceEyebrow:{color:"#075263",fontSize:8,fontWeight:"900",letterSpacing:2},priceRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"flex-end",marginTop:13},price:{color:"#031015",fontSize:39,fontWeight:"900",letterSpacing:-1.5},priceSub:{color:"#075263",fontSize:8,fontWeight:"900",letterSpacing:1.5},priceCopy:{color:"#075263",fontSize:11,lineHeight:17,fontWeight:"700",textAlign:"right"},
+ finalCard:{marginTop:50,paddingVertical:34},finalMini:{color:"#22D3EE",fontSize:8,fontWeight:"900",letterSpacing:2},finalTitle:{color:"#F8FAFC",fontSize:33,lineHeight:39,fontWeight:"900",letterSpacing:-1,marginTop:10},finalCopy:{color:"#788697",fontSize:13,lineHeight:20,marginTop:11},finalButton:{height:48,alignSelf:"stretch",borderRadius:14,backgroundColor:"#F8FAFC",flexDirection:"row",alignItems:"center",justifyContent:"space-between",paddingHorizontal:18,marginTop:23},finalButtonText:{color:"#071018",fontSize:13,fontWeight:"900"},finalArrow:{color:"#071018",fontSize:19},member:{color:"#667586",fontSize:11,textAlign:"center",marginTop:16},memberAccent:{color:"#22D3EE",fontWeight:"800"},
+ footer:{alignItems:"center",borderTopWidth:1,borderTopColor:"#141B25",paddingTop:28,marginTop:6},footerMark:{width:28,height:28,borderRadius:9,borderWidth:1,borderColor:"#164E63",alignItems:"center",justifyContent:"center"},footerMarkText:{color:"#22D3EE",fontWeight:"900"},footerBrand:{color:"#CBD5E1",fontSize:9,fontWeight:"900",letterSpacing:1.6,marginTop:9},footerTiny:{color:"#3E4B5A",fontSize:7,fontWeight:"800",letterSpacing:1.8,marginTop:4}
 });
