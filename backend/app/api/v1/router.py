@@ -8,7 +8,7 @@ from app.api.v1.announcements import router as announcements_router
 from app.api.v1.sessions import router as sessions_router
 from app.api.v1.quizzes import router as quizzes_router
 from app.api.v1.materials import router as materials_router
-from app.api.v1.admin import router as admin_router
+from app.api.v1.admin import router as admin_router\nfrom app.api.v1.assignments import router as assignments_router
 api_router=APIRouter()
 api_router.include_router(health_router,prefix="/health",tags=["Health"])
 api_router.include_router(auth_router,prefix="/auth",tags=["Authentication"])
@@ -23,4 +23,4 @@ api_router.include_router(quizzes_router,prefix="/quizzes",tags=["Quizzes"])
 
 api_router.include_router(materials_router,prefix="/materials",tags=["Materials"])
 
-api_router.include_router(admin_router,prefix="/admin",tags=["Tutor Admin"])
+api_router.include_router(admin_router,prefix="/admin",tags=["Tutor Admin"])\napi_router.include_router(assignments_router,prefix="/assignments",tags=["Assignments"])
