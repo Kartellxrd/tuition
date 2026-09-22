@@ -14,6 +14,8 @@ class EnrollmentResponse(BaseModel):
     id: UUID
     student_id: UUID
     module_id: UUID
+    module_code: str | None = None
+    module_name: str | None = None
     tier: EnrollmentTier
     status: EnrollmentStatus
     expected_price: Decimal
