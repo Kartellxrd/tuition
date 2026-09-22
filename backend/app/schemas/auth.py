@@ -13,13 +13,13 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-class UserResponse(BaseModel):
+class ChangePasswordRequest(BaseModel):\n    current_password: str\n    new_password: str = Field(min_length=8,max_length=128)\n\nclass UserResponse(BaseModel):
     id: str
     name: str
     email: EmailStr
     role: str
     email_verified: bool
-    active: bool
+    active: bool\n    profile_image_url: str | None = None
 
 class TokenResponse(BaseModel):
     access_token: str
