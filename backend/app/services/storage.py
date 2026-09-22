@@ -65,3 +65,36 @@ def delete_course_material(path: str) -> None:
         _client().storage.from_(COURSE_BUCKET).remove([path])
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Could not remove material file.") from exc
+
+
+PROFILE_BUCKET = "profile-images"
+ALLOWED_PROFILE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_PROFILE_SIZE = 5 * 1024 * 1024
+
+async def upload_profile_image(file: UploadFile, user_id: str) -> str:
+    if file.content_type not in ALLOWED_PROFILE_TYPES:
+        raise HTTPException(status_code=400, detail="Profile image must be JPG, PNG or WEBP.")
+    data = await file.read(MAX_PROFILE_SIZE + 1)
+    if not data or len(data) > MAX_PROFILE_SIZE:
+        raise HTTPException(status_code=400, detail="Profile image must be between 1 byte and 5 MB.")
+    ext = Path(file.filename or "").suffix.lower()
+    safe_ext = ext if ext in {".jpg", ".jpeg", ".png", ".webp"} else ".jpg"
+    path = f"{user_id}/{uuid4()}{safe_ext}"
+    try:
+        _client().storage.from_(PROFILE_BUCKET).upload(path, data, {"content-type": file.content_type, "upsert": "false"})
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Could not store profile image.") from exc
+    return path
+
+def signed_profile_image_url(path: str, expires_in: int = 3600) -> str:
+    try:
+        result = _client().storage.from_(PROFILE_BUCKET).create_signed_url(path, expires_in)
+        return result.get("signedURL") or result.get("signedUrl")
+    except Exception:
+        return None
+
+def delete_profile_image(path: str) -> None:
+    try:
+        _client().storage.from_(PROFILE_BUCKET).remove([path])
+    except Exception:
+        pass
