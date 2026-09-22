@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    SUPABASE_URL: str
+    SUPABASE_SERVICE_ROLE_KEY: str
+    CORS_ORIGINS: list[str] = []
+    RESEND_API_KEY: str | None = None
+    EMAIL_FROM: str | None = None
+    EMAIL_ENABLED: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
