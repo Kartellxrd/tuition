@@ -2,7 +2,7 @@ from decimal import Decimal
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.orm import Session, selectinload
 from app.api.dependencies import get_current_user, require_tutor
 from app.core.database import get_db
@@ -23,6 +23,13 @@ def list_quizzes(module_id:UUID,user:User=Depends(get_current_user),db:Session=D
     q=select(Quiz).where(Quiz.module_id==module_id)
     if user.role.value!="TUTOR": q=q.where(Quiz.published.is_(True))
     return list(db.scalars(q.order_by(Quiz.created_at.desc())))
+@router.get("/me/todo")
+def my_quiz_todo(user:User=Depends(get_current_user),db:Session=Depends(get_db)):
+    active_modules=select(Enrollment.module_id).where(Enrollment.student_id==user.id,Enrollment.status==EnrollmentStatus.ACTIVE)
+    attempted=select(QuizAttempt.id).where(QuizAttempt.quiz_id==Quiz.id,QuizAttempt.student_id==user.id).exists()
+    rows=db.execute(select(Quiz,Module.code,Module.name).join(Module,Module.id==Quiz.module_id).where(Quiz.published.is_(True),Quiz.module_id.in_(active_modules),~attempted).order_by(Quiz.created_at.desc())).all()
+    return [{"id":q.id,"type":"QUIZ","module_id":q.module_id,"module_code":code,"module_name":name,"title":q.title,"instructions":q.instructions,"created_at":q.created_at} for q,code,name in rows]
+
 class OptionCreate(BaseModel):
     text:str
     is_correct:bool=False
