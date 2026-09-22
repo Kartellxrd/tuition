@@ -10,7 +10,8 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.models.email_verification import EmailVerificationToken
 from app.models.user import User, UserRole
 from app.models.password_reset import PasswordResetToken
-from app.services.email import send_verification_code, send_password_reset_code\nfrom app.services.storage import delete_profile_image, signed_profile_image_url, upload_profile_image
+from app.services.email import send_verification_code, send_password_reset_code
+from app.services.storage import delete_profile_image, signed_profile_image_url, upload_profile_image
 from app.schemas.auth import ChangePasswordRequest, LoginRequest, RegisterRequest, TokenResponse, UserResponse, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest, ResetPasswordRequest
 
 router = APIRouter()
