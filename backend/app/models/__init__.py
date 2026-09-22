@@ -7,7 +7,8 @@ from app.models.password_reset import PasswordResetToken
 from app.models.material import Material
 from app.models.announcement import Announcement
 from app.models.session import Session
-from app.models.quiz import Quiz, QuizQuestion, QuestionOption, QuizAttempt, QuizAttemptAnswer\nfrom app.models.assignment import Assignment, AssignmentSubmission
+from app.models.quiz import Quiz, QuizQuestion, QuestionOption, QuizAttempt, QuizAttemptAnswer
+from app.models.assignment import Assignment, AssignmentSubmission
 
 __all__ = [
     "User",
@@ -24,5 +25,7 @@ __all__ = [
     "QuizQuestion",
     "QuestionOption",
     "QuizAttempt",
-    "QuizAttemptAnswer",\n    "Assignment",\n    "AssignmentSubmission",
+    "QuizAttemptAnswer",
+    "Assignment",
+    "AssignmentSubmission",
 ]
