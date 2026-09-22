@@ -36,7 +36,8 @@ def upcoming(user:User=Depends(get_current_user),db:DBSession=Depends(get_db)):
     if group_modules: conditions.append((Session.tier==EnrollmentTier.GROUP)&Session.module_id.in_(group_modules))
     if private_ids: conditions.append((Session.tier==EnrollmentTier.ONE_ON_ONE)&Session.enrollment_id.in_(private_ids))
     if not conditions:return []
-    return list(db.scalars(select(Session).where(or_(*conditions),Session.status==SessionStatus.SCHEDULED,Session.start_at>=datetime.now(timezone.utc)).order_by(Session.start_at)))
+    rows=db.execute(select(Session,Module.code,Module.name).join(Module,Module.id==Session.module_id).where(or_(*conditions),Session.status==SessionStatus.SCHEDULED,Session.start_at>=datetime.now(timezone.utc)).order_by(Session.start_at)).all()
+    return [{"id":s.id,"module_id":s.module_id,"module_code":code,"module_name":name,"tier":s.tier,"enrollment_id":s.enrollment_id,"title":s.title,"notes":s.notes,"start_at":s.start_at,"end_at":s.end_at,"mode":s.mode,"location":s.location,"meeting_link":s.meeting_link,"status":s.status} for s,code,name in rows]
 
 class SessionUpdate(BaseModel):
     title:str|None=Field(None,min_length=2,max_length=180); notes:str|None=None; start_at:datetime|None=None; end_at:datetime|None=None; mode:SessionMode|None=None; location:str|None=None; meeting_link:str|None=None; status:SessionStatus|None=None
