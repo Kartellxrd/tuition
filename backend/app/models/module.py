@@ -17,4 +17,4 @@ class Module(Base):
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    enrollments = relationship("Enrollment", back_populates="module")
+    enrollments = relationship("Enrollment", back_populates="module")\n    offerings = relationship("ModuleOffering", back_populates="module")
