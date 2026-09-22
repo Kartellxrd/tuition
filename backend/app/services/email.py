@@ -9,7 +9,7 @@ def _send(to:str,subject:str,html:str)->None:
     if not settings.RESEND_API_KEY or not settings.EMAIL_FROM:
         raise EmailDeliveryError("Email delivery is enabled but not configured.")
     payload=json.dumps({"from":settings.EMAIL_FROM,"to":[to],"subject":subject,"html":html}).encode()
-    req=request.Request("https://api.resend.com/emails",data=payload,method="POST",headers={"Authorization":f"Bearer {settings.RESEND_API_KEY}","Content-Type":"application/json"})
+    req=request.Request("https://api.resend.com/emails",data=payload,method="POST",headers={"Authorization":f"Bearer {settings.RESEND_API_KEY}","Content-Type":"application/json","User-Agent":"CodeReadyTutors/1.0"})
     try:
         with request.urlopen(req,timeout=10) as response:
             if response.status>=300: raise EmailDeliveryError("Email provider rejected the message.")

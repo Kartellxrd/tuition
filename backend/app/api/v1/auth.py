@@ -8,7 +8,8 @@ from app.api.dependencies import get_current_user
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.email_verification import EmailVerificationToken
-from app.models.user import User, UserRole\nfrom app.models.password_reset import PasswordResetToken
+from app.models.user import User, UserRole
+from app.models.password_reset import PasswordResetToken
 from app.services.email import send_verification_code, send_password_reset_code
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserResponse, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest, ResetPasswordRequest
 

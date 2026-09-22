@@ -1,5 +1,6 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile\nfrom pydantic import BaseModel, Field, ConfigDict
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user, require_tutor
@@ -10,7 +11,19 @@ from app.models.module import Module
 from app.models.user import User
 from app.services.storage import delete_course_material, signed_course_material_url, upload_course_material
 
-router = APIRouter()\n\nclass MaterialResponse(BaseModel):\n    model_config=ConfigDict(from_attributes=True)\n    id: UUID\n    module_id: UUID\n    title: str\n    description: str|None\n    category: MaterialCategory\n    original_filename: str\n    mime_type: str\n\ndef public_material(item:Material): return MaterialResponse.model_validate(item)
+router = APIRouter()
+
+class MaterialResponse(BaseModel):
+    model_config=ConfigDict(from_attributes=True)
+    id: UUID
+    module_id: UUID
+    title: str
+    description: str|None
+    category: MaterialCategory
+    original_filename: str
+    mime_type: str
+
+def public_material(item:Material): return MaterialResponse.model_validate(item)
 
 def active_access(db: Session, user: User, module_id: UUID) -> bool:
     return db.scalar(select(Enrollment.id).where(Enrollment.student_id == user.id, Enrollment.module_id == module_id, Enrollment.status == EnrollmentStatus.ACTIVE)) is not None
