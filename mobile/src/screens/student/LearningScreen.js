@@ -10,7 +10,7 @@ import{colors}from"../../theme";
 const label=t=>(t||"").replaceAll("_"," ");
 export default function LearningScreen({navigation}){
  const[items,setItems]=useState([]),[sessions,setSessions]=useState([]),[tasks,setTasks]=useState([]),[loading,setLoading]=useState(true);
- const load=useCallback(()=>{setLoading(true);Promise.all([api.get("/enrollments/me"),api.get("/sessions/me/upcoming"),api.get("/quizzes/me/todo")]).then(([e,s,t])=>{setItems(e.data);setSessions(s.data);setTasks(t.data)}).catch(()=>{}).finally(()=>setLoading(false))},[]);
+ const load=useCallback(()=>{setLoading(true);Promise.all([api.get("/enrollments/me"),api.get("/sessions/me/upcoming"),api.get("/quizzes/me/todo"),api.get("/assignments/me/todo")]).then(([e,s,q,a])=>{setItems(e.data);setSessions(s.data);setTasks([...q.data,...a.data])}).catch(()=>{}).finally(()=>setLoading(false))},[]);
  useFocusEffect(useCallback(()=>{load()},[load]));
  const active=items.filter(x=>x.status==="ACTIVE"),pending=items.filter(x=>x.status==="PENDING");
  const nextFor=e=>sessions.find(s=>s.module_id===e.module_id&&(s.enrollment_id==null||s.enrollment_id===e.id));
@@ -19,8 +19,8 @@ export default function LearningScreen({navigation}){
   {loading?<ActivityIndicator style={{marginTop:28}} color={colors.cyan}/>:<>
    <View style={s.summary}><View><Text style={s.count}>{active.length}</Text><Text style={s.summaryText}>Active</Text></View><View style={s.divider}/><View><Text style={s.count}>{pending.length}</Text><Text style={s.summaryText}>Pending</Text></View></View>
    <Text style={s.section}>TO DO</Text>
-   {tasks.length===0?<View style={s.todoEmpty}><Ionicons name="checkmark-circle-outline" size={20} color={colors.success}/><Text style={s.todoEmptyText}>You're all caught up.</Text></View>:tasks.slice(0,4).map(t=><Pressable key={t.id} onPress={()=>navigation.navigate("TakeQuiz",{quizId:t.id})} style={s.todo}>
-    <View style={s.todoIcon}><Ionicons name="document-text-outline" size={21} color={colors.cyan}/></View><View style={s.flex}><Text style={s.todoType}>QUIZ · {t.module_code}</Text><Text style={s.todoTitle}>{t.title}</Text><Text style={s.todoHint}>Ready to complete</Text></View><Ionicons name="chevron-forward" size={19} color={colors.cyan}/>
+   {tasks.length===0?<View style={s.todoEmpty}><Ionicons name="checkmark-circle-outline" size={20} color={colors.success}/><Text style={s.todoEmptyText}>You're all caught up.</Text></View>:tasks.slice(0,4).map(t=><Pressable key={t.id} onPress={()=>t.type==="QUIZ"&&navigation.navigate("TakeQuiz",{quizId:t.id})} style={s.todo}>
+    <View style={s.todoIcon}><Ionicons name={t.type==="QUIZ"?"document-text-outline":"clipboard-outline"} size={21} color={colors.cyan}/></View><View style={s.flex}><Text style={s.todoType}>{t.type} · {t.module_code}</Text><Text style={s.todoTitle}>{t.title}</Text><Text style={s.todoHint}>{t.due_at?`Due ${new Date(t.due_at).toLocaleString()}`:"Ready to complete"}</Text></View><Ionicons name="chevron-forward" size={19} color={colors.cyan}/>
    </Pressable>)}
    <Text style={s.section}>ACTIVE LEARNING</Text>
    {active.length===0?<View style={s.empty}><Ionicons name="book-outline" size={27} color={colors.cyan}/><Text style={s.emptyTitle}>No active learning yet</Text><Muted>Your approved enrollments will appear here.</Muted></View>:active.map(e=>{const next=nextFor(e);return <Pressable key={e.id} onPress={()=>navigation.navigate("ModuleHub",{enrollment:e})} style={({pressed})=>[s.card,pressed&&{opacity:.82}]}>
