@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import hashlib
 import secrets
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
@@ -10,13 +10,13 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.models.email_verification import EmailVerificationToken
 from app.models.user import User, UserRole
 from app.models.password_reset import PasswordResetToken
-from app.services.email import send_verification_code, send_password_reset_code
-from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserResponse, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest, ResetPasswordRequest
+from app.services.email import send_verification_code, send_password_reset_code\nfrom app.services.storage import delete_profile_image, signed_profile_image_url, upload_profile_image
+from app.schemas.auth import ChangePasswordRequest, LoginRequest, RegisterRequest, TokenResponse, UserResponse, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest, ResetPasswordRequest
 
 router = APIRouter()
 
 def serialize_user(user: User) -> UserResponse:
-    return UserResponse(id=str(user.id), name=user.name, email=user.email, role=user.role.value, email_verified=user.email_verified, active=user.active)
+    return UserResponse(id=str(user.id), name=user.name, email=user.email, role=user.role.value, email_verified=user.email_verified, active=user.active, profile_image_url=signed_profile_image_url(user.profile_image_path) if user.profile_image_path else None)
 
 def code_hash(code: str) -> str:
     return hashlib.sha256(code.encode()).hexdigest()
@@ -102,3 +102,30 @@ def reset_password(payload:ResetPasswordRequest,db:Session=Depends(get_db)):
         token.attempt_count+=1;db.commit();raise HTTPException(400,"Invalid or expired reset code.")
     user.password_hash=hash_password(payload.new_password);token.used_at=now;db.commit()
     return {"message":"Password updated successfully."}
+
+
+@router.post("/change-password")
+def change_password(payload:ChangePasswordRequest,user:User=Depends(get_current_user),db:Session=Depends(get_db)):
+    if not verify_password(payload.current_password,user.password_hash):
+        raise HTTPException(status_code=400,detail="Current password is incorrect.")
+    if verify_password(payload.new_password,user.password_hash):
+        raise HTTPException(status_code=400,detail="New password must be different from your current password.")
+    user.password_hash=hash_password(payload.new_password)
+    db.commit()
+    return {"message":"Password changed successfully."}
+
+@router.post("/profile-image",response_model=UserResponse)
+async def profile_image(file:UploadFile=File(...),user:User=Depends(get_current_user),db:Session=Depends(get_db)):
+    old=user.profile_image_path
+    user.profile_image_path=await upload_profile_image(file,str(user.id))
+    db.commit();db.refresh(user)
+    if old: delete_profile_image(old)
+    return serialize_user(user)
+
+@router.delete("/profile-image",response_model=UserResponse)
+def remove_profile_image(user:User=Depends(get_current_user),db:Session=Depends(get_db)):
+    old=user.profile_image_path
+    user.profile_image_path=None
+    db.commit();db.refresh(user)
+    if old: delete_profile_image(old)
+    return serialize_user(user)
